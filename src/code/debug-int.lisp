@@ -953,7 +953,8 @@
     (when saved-fp
       (compute-calling-frame (descriptor-sap saved-fp)
                              (descriptor-sap saved-pc)
-                             up-frame))))
+                             up-frame
+                             t))))
 
 ;;; Return the frame immediately below FRAME on the stack; or when
 ;;; FRAME is the bottom of the stack, return NIL.
@@ -3549,8 +3550,7 @@ register."
                            ;; declared to be a SAP.
                            #!+(or x86 x86-64) (sb!vm:context-pc scp)
                            #!-(or x86 x86-64) nil
-                           nil)
-    nil))
+                           nil)))
 
 (defun handle-fun-end-breakpoint (offset component context)
   (let ((data (breakpoint-data component offset nil)))
