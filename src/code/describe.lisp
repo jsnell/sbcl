@@ -52,6 +52,12 @@
                   ,@(when declarations `((declare ,@declarations)))
                   ,@body)
                t name)))
+    #+sb-eval
+    (sb-eval2:minimally-compiled-function
+     (let ((name (sb-eval2:minimally-compiled-function-name fun))
+           (lambda-list (sb-eval2:minimally-compiled-function-lambda-list fun)))
+       (declare (ignore lambda-list))
+       (values nil t name)))
     (function
      (let* ((name (fun-name fun))
             (fun (%simple-fun-self (%fun-fun fun)))
@@ -179,6 +185,9 @@
     #+sb-eval
     (sb-eval:interpreted-function
      "interpreted function")
+    #+sb-eval
+    (sb-eval2:minimally-compiled-function
+     "minimally compiled function")
     (generic-function
      "generic-function")
     (t
@@ -549,7 +558,7 @@
 
 (defun describe-function-source (function stream)
   (if (compiled-function-p function)
-      (let* ((code (fun-code-header (%fun-fun function)))
+      (let* ((code (fun-code-header function))
              (info (sb-kernel:%code-debug-info code)))
         (when info
           (let ((source (sb-c::debug-info-source info)))
@@ -565,7 +574,10 @@
                        (format stream "~@:_Source form:~@:_  ~S"
                                (sb-di:debug-source-form source)))))))))
       #+sb-eval
-      (let ((source (sb-eval:interpreted-function-source-location function)))
+      (let ((source (or (and (sb-eval:interpreted-function-p function)
+                             (sb-eval:interpreted-function-source-location function))
+                        (and (sb-eval2:minimally-compiled-function-p function)
+                             (sb-eval2:minimally-compiled-function-source-location function)))))
         (when source
           (let ((namestring (sb-c:definition-source-location-namestring source)))
             (when namestring

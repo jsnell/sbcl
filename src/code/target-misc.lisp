@@ -13,6 +13,7 @@
 ;;;; files for more information.
 
 (in-package "SB!IMPL")
+
 ;;;; Generalizing over SIMPLE-FUN, CLOSURE, and FUNCALLABLE-INSTANCEs
 
 ;;; Underlying SIMPLE-FUN
@@ -36,6 +37,9 @@
     #!+sb-eval
     (sb!eval:interpreted-function
      (sb!eval:interpreted-function-debug-lambda-list function))
+    #!+sb-eval
+    (sb!eval2::minimally-compiled-function
+     (sb!eval2::minimally-compiled-function-lambda-list function))
     (t
      (%simple-fun-arglist (%fun-fun function)))))
 
@@ -44,6 +48,9 @@
     #!+sb-eval
     (sb!eval:interpreted-function
      (setf (sb!eval:interpreted-function-debug-lambda-list function) new-value))
+    #!+sb-eval
+    (sb!eval2::minimally-compiled-function
+     (setf (sb!eval2::minimally-compiled-function-lambda-list function) new-value))
     ;; FIXME: Eliding general funcallable-instances for now.
     ((or simple-fun closure)
      (setf (%simple-fun-arglist (%fun-fun function)) new-value)))
@@ -60,6 +67,9 @@
     #!+sb-eval
     (sb!eval:interpreted-function
      (sb!eval:interpreted-function-debug-name function))
+    #!+sb-eval
+    (sb!eval2::minimally-compiled-function
+     (sb!eval2::minimally-compiled-function-name function))
     (t
      (%simple-fun-name (%fun-fun function)))))
 
@@ -68,6 +78,9 @@
     #!+sb-eval
     (sb!eval:interpreted-function
      (setf (sb!eval:interpreted-function-debug-name function) new-value))
+    #!+sb-eval
+    (sb!eval2::minimally-compiled-function
+     (setf (sb!eval2::minimally-compiled-function-name function) new-value))
     ;; FIXME: Eliding general funcallable-instances for now.
     ((or simple-fun closure)
      (setf (%simple-fun-name (%fun-fun function)) new-value)))
@@ -78,6 +91,9 @@
     #!+sb-eval
     (sb!eval:interpreted-function
      (sb!eval:interpreted-function-documentation function))
+    #!+sb-eval
+    (sb!eval2::minimally-compiled-function
+     (sb!eval2::minimally-compiled-function-documentation function))
     (t
      (%simple-fun-doc (%fun-fun function)))))
 
@@ -87,6 +103,9 @@
     #!+sb-eval
     (sb!eval:interpreted-function
      (setf (sb!eval:interpreted-function-documentation function) new-value))
+    #!+sb-eval
+    (sb!eval2::minimally-compiled-function
+     (setf (sb!eval2::minimally-compiled-function-documentation function) new-value))
     ((or simple-fun closure)
      (setf (%simple-fun-doc (%fun-fun function)) new-value)))
   new-value)

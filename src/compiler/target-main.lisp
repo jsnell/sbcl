@@ -130,6 +130,11 @@
          (multiple-value-bind (definition lexenv)
              (sb!eval:prepare-for-compile definition)
            (actually-compile name definition lexenv source-info tlf errorp)))
+        #!+sb-eval
+        ((sb!eval2:minimally-compiled-function-p definition)
+         (return-from compile-in-lexenv
+           (compile-in-lexenv name (sb!kernel:funcallable-instance-fun definition)
+                              lexenv source-info tlf errorp)))
         ((compiled-function-p definition)
          (values definition nil nil))
         (t

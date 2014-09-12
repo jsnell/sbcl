@@ -428,6 +428,8 @@
  ;; definition of the COMPILED-FUNCTION type.
  #!+sb-eval
  ("src/code/early-full-eval")
+ #!+sb-eval
+ ("src/code/early-eval2")
 
  ("src/code/typep" :not-host)
 
@@ -652,6 +654,21 @@
  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
  ;; files which depend in some way (directly or indirectly) on stuff
  ;; compiled as part of the compiler
+
+ #!+sb-eval
+ ("src/code/eval2-macros"       :not-host)
+ #!+sb-eval
+ ("src/code/eval2-types"        :not-host)
+ #!+sb-eval
+ ("src/code/eval2-util"         :not-host)
+ #!+sb-eval
+ ("src/code/eval2-sbcl"         :not-host)
+ #!+sb-eval
+ ("src/code/eval2"              :not-host)
+ #!+sb-eval
+ ("src/code/eval2-transformers" :not-host)
+ #!+sb-eval
+ ("src/code/eval2-compiler"     :not-host)
 
  ("src/code/late-extensions") ; needs condition system
  ("src/compiler/generic/target-core" :not-host) ; uses stuff from

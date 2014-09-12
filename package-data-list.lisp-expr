@@ -3005,6 +3005,29 @@ structure representations"
                "EVAL-IN-NATIVE-ENVIRONMENT"
                "PREPARE-FOR-COMPILE"
                "*EVAL-LEVEL*"))
+   #!+sb-eval
+   #s(sb-cold:package-data
+      :name "SB!EVAL2"
+      :doc "internal: the evaluator implementation used to execute code without compiling it."
+      :use ("CL")
+      :import-from (("SB!C" "SIMPLE-PROGRAM-ERROR"))
+      :export ("PREPARE-FORM"
+               "COMPILE-FORM"
+               "MAKE-NULL-ENVIRONMENT"
+               "MAKE-NULL-CONTEXT"
+               "NATIVE-ENVIRONMENT->CONTEXT"
+               "CALL-WITH-ENVIRONMENT"
+               "CALL-WITH-CONTEXT"
+               "WITH-CONTEXT"
+               "MINIMALLY-COMPILED-FUNCTION"
+               "MINIMALLY-COMPILED-FUNCTION-P"
+               "MINIMALLY-COMPILED-FUNCTION-NAME"
+               "MINIMALLY-COMPILED-FUNCTION-LAMBDA-LIST"
+               "MINIMALLY-COMPILED-FUNCTION-DOCUMENTATION"
+               "MINIMALLY-COMPILED-FUNCTION-SOURCE-LOCATION"
+               "MINIMALLY-COMPILED-FUNCTION-SOURCE-PATH"
+               "EVAL2"
+               "LOAD2"))
 
    #!+win32
    #s(sb-cold:package-data

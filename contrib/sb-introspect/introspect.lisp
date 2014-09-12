@@ -376,6 +376,10 @@ If an unsupported TYPE is requested, the function will return NIL.
      (let ((source (translate-source-location
                     (sb-eval:interpreted-function-source-location object))))
        source))
+    #+sb-eval
+    (sb-eval2::minimally-compiled-function
+     (translate-source-location
+      (sb-eval2::minimally-compiled-function-source-location object)))
     (function
      (find-function-definition-source object))
     ((or condition standard-object structure-object)
@@ -440,6 +444,9 @@ function designator."
         #+sb-eval
         ((typep function 'sb-eval:interpreted-function)
          (sb-eval:interpreted-function-lambda-list function))
+        #+sb-eval
+        ((typep function 'sb-eval2:minimally-compiled-function)
+         (sb-eval2:minimally-compiled-function-lambda-list function))
         (t
          (sb-kernel:%simple-fun-arglist (sb-kernel:%fun-fun function)))))
 
