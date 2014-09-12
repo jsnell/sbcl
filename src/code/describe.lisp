@@ -558,7 +558,7 @@
 
 (defun describe-function-source (function stream)
   (if (compiled-function-p function)
-      (let* ((code (fun-code-header function))
+      (let* ((code (fun-code-header (%fun-fun function)))
              (info (sb-kernel:%code-debug-info code)))
         (when info
           (let ((source (sb-c::debug-info-source info)))
