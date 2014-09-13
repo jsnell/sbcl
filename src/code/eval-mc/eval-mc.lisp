@@ -1,4 +1,4 @@
-(in-package "SB!EVAL2")
+(in-package "SB!EVAL-MC")
 
 (declaim-optimizations)
 
@@ -354,7 +354,7 @@ passing an ENVIRONMENT object as the argument."
 ;;; These replace CL:EVAL and CL:LOAD.  They are mainly suitable for
 ;;; debugging the evaluator or for use in implementations other than
 ;;; SBCL.
-(defun eval2 (form &optional environment)
+(defun eval-mc (form &optional environment)
   (let ((context (if environment
                      (native-environment->context environment)
                      (make-null-context)))

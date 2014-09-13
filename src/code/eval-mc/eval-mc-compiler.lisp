@@ -1,12 +1,12 @@
-(in-package "SB!EVAL2")
+(in-package "SB!EVAL-MC")
 
 ;;;; THE COMPILER
 ;;;
-;;; The eval2 compiler (more precisely, the COMPILE-FORM function)
+;;; The eval-mc compiler (more precisely, the COMPILE-FORM function)
 ;;; takes a Lisp form and a lexical context consisting of compile-time
 ;;; information (such as lexical variable information and
 ;;; declarations), and returns a corresponding form in VM code to be
-;;; processed further by the PREPARE-FORM function in eval2.lisp.
+;;; processed further by the PREPARE-FORM function in eval-mc.lisp.
 ;;;
 ;;; The lexical context is passed through the special variable
 ;;; *CONTEXT*.

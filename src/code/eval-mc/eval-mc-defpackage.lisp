@@ -1,5 +1,5 @@
-(cl:defpackage "EVAL2"
-  (:nicknames "SB-EVAL2" "SB!EVAL2")
+(cl:defpackage "EVAL-MC"
+  (:nicknames "SB-EVAL-MC" "SB!EVAL-MC")
   (:use "COMMON-LISP")
   (:export "PREPARE-FORM"
            "COMPILE-FORM"
@@ -17,4 +17,4 @@
            "MINIMALLY-COMPILED-FUNCTION-SOURCE-LOCATION"
            "MINIMALLY-COMPILED-FUNCTION-SOURCE-PATH"
            "LOAD2"
-           "EVAL2"))
+           "EVAL-MC"))

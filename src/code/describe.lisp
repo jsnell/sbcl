@@ -53,9 +53,9 @@
                   ,@body)
                t name)))
     #+sb-eval
-    (sb-eval2:minimally-compiled-function
-     (let ((name (sb-eval2:minimally-compiled-function-name fun))
-           (lambda-list (sb-eval2:minimally-compiled-function-lambda-list fun)))
+    (sb-eval-mc:minimally-compiled-function
+     (let ((name (sb-eval-mc:minimally-compiled-function-name fun))
+           (lambda-list (sb-eval-mc:minimally-compiled-function-lambda-list fun)))
        (declare (ignore lambda-list))
        (values nil t name)))
     (function
@@ -186,7 +186,7 @@
     (sb-eval:interpreted-function
      "interpreted function")
     #+sb-eval
-    (sb-eval2:minimally-compiled-function
+    (sb-eval-mc:minimally-compiled-function
      "minimally compiled function")
     (generic-function
      "generic-function")
@@ -576,8 +576,8 @@
       #+sb-eval
       (let ((source (or (and (sb-eval:interpreted-function-p function)
                              (sb-eval:interpreted-function-source-location function))
-                        (and (sb-eval2:minimally-compiled-function-p function)
-                             (sb-eval2:minimally-compiled-function-source-location function)))))
+                        (and (sb-eval-mc:minimally-compiled-function-p function)
+                             (sb-eval-mc:minimally-compiled-function-source-location function)))))
         (when source
           (let ((namestring (sb-c:definition-source-location-namestring source)))
             (when namestring

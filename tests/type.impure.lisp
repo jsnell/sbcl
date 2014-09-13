@@ -575,7 +575,7 @@
  (subtypep '(and function
                  (not compiled-function)
                  (not sb-eval:interpreted-function)
-                 (not sb-eval2:minimally-compiled-function))
+                 (not sb-eval-mc:minimally-compiled-function))
            nil))
 
 ;;; weakening of union type checks

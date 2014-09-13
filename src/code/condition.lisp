@@ -1388,10 +1388,10 @@ handled by any other handler, it will be muffled.")
       (sb!c:definition-source-location-namestring
           (sb!eval:interpreted-function-source-location function))))
   #!+sb-eval
-  (when (typep function 'sb!eval2:minimally-compiled-function)
+  (when (typep function 'sb!eval-mc:minimally-compiled-function)
     (return-from function-file-namestring
       (let ((source-loc
-             (sb!eval2:minimally-compiled-function-source-location function)))
+             (sb!eval-mc:minimally-compiled-function-source-location function)))
         (when source-loc (sb!c:definition-source-location-namestring source-loc)))))
   (let* ((fun (%fun-fun function))
          (code (fun-code-header fun))

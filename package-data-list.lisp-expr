@@ -3007,7 +3007,7 @@ structure representations"
                "*EVAL-LEVEL*"))
    #!+sb-eval
    #s(sb-cold:package-data
-      :name "SB!EVAL2"
+      :name "SB!EVAL-MC"
       :doc "internal: the evaluator implementation used to execute code without compiling it."
       :use ("CL")
       :import-from (("SB!C" "SIMPLE-PROGRAM-ERROR"))
@@ -3026,7 +3026,7 @@ structure representations"
                "MINIMALLY-COMPILED-FUNCTION-DOCUMENTATION"
                "MINIMALLY-COMPILED-FUNCTION-SOURCE-LOCATION"
                "MINIMALLY-COMPILED-FUNCTION-SOURCE-PATH"
-               "EVAL2"
+               "EVAL-MC"
                "LOAD2"))
 
    #!+win32

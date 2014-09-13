@@ -1,4 +1,4 @@
-(in-package "SB!EVAL2")
+(in-package "SB!EVAL-MC")
 
 (sb!kernel::!defstruct-with-alternate-metaclass
  minimally-compiled-function

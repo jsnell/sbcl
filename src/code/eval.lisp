@@ -265,13 +265,13 @@
     ((:interpret)
      (sb!eval:eval-in-native-environment exp lexenv))
     ((:minimally-compile)
-     (sb!eval2:call-with-environment
-      (sb!eval2:make-null-environment)
-      (sb!eval2:prepare-form
-       (sb!eval2:call-with-context
-        (sb!eval2:native-environment->context lexenv)
+     (sb!eval-mc:call-with-environment
+      (sb!eval-mc:make-null-environment)
+      (sb!eval-mc:prepare-form
+       (sb!eval-mc:call-with-context
+        (sb!eval-mc:native-environment->context lexenv)
         (lambda ()
-          (sb!eval2:compile-form exp (if *eval-tlf-index*
+          (sb!eval-mc:compile-form exp (if *eval-tlf-index*
                                          :execute-tlf
                                          :execute)))))))
     ((:compile)

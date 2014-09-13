@@ -1,4 +1,4 @@
-(in-package "SB!EVAL2")
+(in-package "SB!EVAL-MC")
 
 (defclass minimally-compiled-function (c2mop:funcallable-standard-object)
   ((name          :accessor minimally-compiled-function-name

@@ -237,14 +237,14 @@ evaluated expressions.
            (cons "Documentation" (sb-eval:interpreted-function-documentation object)))))
 
 #+sb-eval
-(defmethod inspected-parts ((object sb-eval2:minimally-compiled-function))
+(defmethod inspected-parts ((object sb-eval-mc:minimally-compiled-function))
   (values (format nil "The object is a minimally compiled function named ~S.~%"
                   (nth-value 2 (function-lambda-expression object)))
           t
           (list
-           (cons "Lambda-list" (sb-eval2:minimally-compiled-function-lambda-list object))
+           (cons "Lambda-list" (sb-eval-mc:minimally-compiled-function-lambda-list object))
            (cons "Definition" (function-lambda-expression object))
-           (cons "Documentation" (sb-eval2:minimally-compiled-function-documentation object)))))
+           (cons "Documentation" (sb-eval-mc:minimally-compiled-function-documentation object)))))
 
 (defmethod inspected-parts ((object vector))
   (values (format nil

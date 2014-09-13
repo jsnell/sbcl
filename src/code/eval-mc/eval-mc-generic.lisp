@@ -1,4 +1,4 @@
-(in-package "SB!EVAL2")
+(in-package "SB!EVAL-MC")
 
 (defmacro declaim-optimizations ()
   `(declaim (optimize (debug 2) (space 2) (speed 2) (safety 0) (compilation-speed 0))))

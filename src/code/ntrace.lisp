@@ -143,7 +143,7 @@
                 named-p
                 :compiled-closure))
        #+sb-eval
-       (sb-eval2:minimally-compiled-function
+       (sb-eval-mc:minimally-compiled-function
         (values res named-p :minimally-compiled-closure))
        (funcallable-instance
         (values res named-p :funcallable-instance))

@@ -684,28 +684,28 @@
 ;;
 ;;
 (defun compute-interpreted-debug-vars (env)
-  (let ((debug-info (and env (sb!eval2::environment-debug-record env))))
+  (let ((debug-info (and env (sb!eval-mc::environment-debug-record env))))
     (when debug-info
       (let* ((var-ids  (make-hash-table :test 'equal))
-             (context  (and debug-info (sb!eval2::debug-record-context debug-info)))
+             (context  (and debug-info (sb!eval-mc::debug-record-context debug-info)))
              (lexicals (nreverse
                         (remove-if #'consp
-                                   (sb!eval2::context-collect-lexicals context)
-                                   :key #'sb!eval2::lexical-name))))
+                                   (sb!eval-mc::context-collect-lexicals context)
+                                   :key #'sb!eval-mc::lexical-name))))
         (flet ((make-debug-var (lexical)
-                 (let ((var (sb!eval2::lexical-name lexical)))
+                 (let ((var (sb!eval-mc::lexical-name lexical)))
                    (make-interpreted-debug-var
                     var
                     (incf (gethash var var-ids -1))
-                    (sb!eval2::lexical-nesting lexical)
-                    (sb!eval2::lexical-offset lexical)
+                    (sb!eval-mc::lexical-nesting lexical)
+                    (sb!eval-mc::lexical-offset lexical)
                     env))))
           (coerce (mapcar #'make-debug-var lexicals) 'simple-vector))))))
 
 
 (defun interpreted-call-frame-environment (frame)
   (let* ((debug-fun (frame-debug-fun frame))
-         (env-var (first (debug-fun-symbol-vars debug-fun 'sb!eval2::envbox))))
+         (env-var (first (debug-fun-symbol-vars debug-fun 'sb!eval-mc::envbox))))
     (and env-var
          (not (eq env-var :deleted))
          (ignore-errors
@@ -792,7 +792,7 @@
 ;;;
 ;;;
 (defun possibly-an-interpreted-frame (frame up-frame)
-  (when sb!eval2::*debug-interpreter*
+  (when sb!eval-mc::*debug-interpreter*
     (return-from possibly-an-interpreted-frame
       frame))
   (when (null frame)
@@ -800,23 +800,23 @@
       nil))
   (when (or (equal (debug-fun-name (frame-debug-fun frame))
                    '(sb!c::&more-processor
-                     (labels sb!eval2::iter :in sb!eval2::prepare-lambda)))
+                     (labels sb!eval-mc::iter :in sb!eval-mc::prepare-lambda)))
             (equal (debug-fun-name (frame-debug-fun frame))
-                   '(labels sb!eval2::iter :in sb!eval2::prepare-lambda))
+                   '(labels sb!eval-mc::iter :in sb!eval-mc::prepare-lambda))
             (equal (debug-fun-name (frame-debug-fun frame))
-                   '(flet sb!eval2::handle-arguments :in sb!eval2::prepare-lambda))
+                   '(flet sb!eval-mc::handle-arguments :in sb!eval-mc::prepare-lambda))
             (equal (debug-fun-name (frame-debug-fun frame))
                    '(sb!c::&more-processor
-                     (flet sb!eval2::handle-arguments :in sb!eval2::prepare-lambda)))
+                     (flet sb!eval-mc::handle-arguments :in sb!eval-mc::prepare-lambda)))
             (equal (debug-fun-name (frame-debug-fun frame))
-                   'sb!eval2::eval-closure)
+                   'sb!eval-mc::eval-closure)
             (and (listp (debug-fun-name (frame-debug-fun frame)))
-                 (eq 'sb!eval2::eval-closure
+                 (eq 'sb!eval-mc::eval-closure
                      (first (debug-fun-name (frame-debug-fun frame))))))
     (return-from possibly-an-interpreted-frame
       (frame-down frame)))
   (unless (eq (debug-fun-name (frame-debug-fun frame))
-              'sb!eval2::minimally-compiled-function)
+              'sb!eval-mc::minimally-compiled-function)
     (return-from possibly-an-interpreted-frame
       frame))
   (let ((eval-closure-frame
@@ -829,16 +829,16 @@
                                   :format-arguments (list frame closure?))))))
                    (eval-closure-frame-p (frame)
                      (let ((fname (debug-fun-name (frame-debug-fun frame))))
-                       (or (eq fname 'sb!eval2::eval-closure)
+                       (or (eq fname 'sb!eval-mc::eval-closure)
                            (and (listp fname)
-                                (eq 'sb!eval2::eval-closure (first fname))))))
+                                (eq 'sb!eval-mc::eval-closure (first fname))))))
                    (interpreted-call-frame-p (frame)
                      (eq (debug-fun-name (frame-debug-fun frame))
-                         'sb!eval2::minimally-compiled-function))
+                         'sb!eval-mc::minimally-compiled-function))
                    (has-debug-info-p (frame)
                      (let ((closure?
                              (checked-frame-closure-vars frame)))
-                       (and closure? (sb!eval2::source-path closure?))))
+                       (and closure? (sb!eval-mc::source-path closure?))))
                    (collect-descendent-eval-closure-frames (frame)
                      (if (or (null frame)
                              (interpreted-call-frame-p frame))
@@ -858,10 +858,10 @@
         (frame-down frame)
         (let* ((debug-fun (frame-debug-fun frame))
                (closure (frame-closure-vars eval-closure-frame))
-               (source-path (sb!eval2::source-path closure))
+               (source-path (sb!eval-mc::source-path closure))
                (call-env (interpreted-call-frame-environment frame))
                (eval-env (interpreter-frame-environment eval-closure-frame))
-               (call-debug-info (and call-env (sb!eval2::environment-debug-record call-env)))
+               (call-debug-info (and call-env (sb!eval-mc::environment-debug-record call-env)))
                (more-info (cdar (compiled-debug-fun-lambda-list (frame-debug-fun frame))))
                (more-context (debug-var-value (first more-info) frame))
                (more-count (debug-var-value (second more-info) frame))
@@ -876,11 +876,11 @@
                   :%lambda-list-gen (lambda ()
                                       (compute-interpreted-lambda-list
                                        call-debug-vars
-                                       (sb!eval2::debug-record-lambda-list call-debug-info)
+                                       (sb!eval-mc::debug-record-lambda-list call-debug-info)
                                        args))
                   :%debug-vars eval-debug-vars
                   :%function (frame-closure-vars frame)
-                  :%name (and call-debug-info (sb!eval2::debug-record-function-name call-debug-info))
+                  :%name (and call-debug-info (sb!eval-mc::debug-record-function-name call-debug-info))
                   :eval-closure closure))
                (code-location
                  (compute-interpreted-code-location interpreted-debug-fun
@@ -914,7 +914,7 @@
 ;;;
 ;;;
 (defun eval-closure-debug-source (closure)
-  (let ((source-loc (sb!eval2::source-location closure)))
+  (let ((source-loc (sb!eval-mc::source-location closure)))
     (if source-loc
         (sb!c::make-debug-source
          :namestring (sb!c::definition-source-location-namestring source-loc)
@@ -2346,7 +2346,7 @@ register."
 
 (defun interpreted-debug-var-value (debug-var frame)
   (declare (ignore frame))
-  (sb!eval2::environment-value (interpreted-debug-var-env debug-var)
+  (sb!eval-mc::environment-value (interpreted-debug-var-env debug-var)
                                (interpreted-debug-var-level debug-var)
                                (interpreted-debug-var-offset debug-var)))
 

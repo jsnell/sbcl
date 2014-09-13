@@ -192,8 +192,8 @@ comparison.")
     (sb-eval:interpreted-function
      (setf (sb-eval:interpreted-function-name fun) new-name))
     #+sb-eval
-    (sb-eval2:minimally-compiled-function
-     (setf (sb-eval2:minimally-compiled-function-name fun) new-name))
+    (sb-eval-mc:minimally-compiled-function
+     (setf (sb-eval-mc:minimally-compiled-function-name fun) new-name))
     (funcallable-instance ;; KLUDGE: probably a generic function...
      (cond ((if (eq **boot-state** 'complete)
                 (typep fun 'generic-function) ; FIXME: inefficient forward-ref

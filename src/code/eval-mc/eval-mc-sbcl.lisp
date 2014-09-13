@@ -1,4 +1,4 @@
-(in-package "SB!EVAL2")
+(in-package "SB!EVAL-MC")
 
 (defmacro declaim-optimizations ()
   `(declaim (optimize (debug 3) (space 2) (speed 2) (safety 0) (compilation-speed 0))))
@@ -8,7 +8,7 @@
 
 ;;;; SETTINGS
 (defparameter *debug-interpreter* nil
-  "If true, preserve SB-EVAL2::EVAL-CLOSURE frames in stack traces.  Otherwise, generate human-readable stack frames of SB-EVAL2:MINIMALLY-COMPILED-FUNCTION calls suitable for debugging programs.")
+  "If true, preserve SB-EVAL-MC::EVAL-CLOSURE frames in stack traces.  Otherwise, generate human-readable stack frames of SB-EVAL-MC:MINIMALLY-COMPILED-FUNCTION calls suitable for debugging programs.")
 
 
 ;;;; COMPILE-TIME CONSTANTS

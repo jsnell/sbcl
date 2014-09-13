@@ -3,4 +3,4 @@
 (sb!xc:deftype compiled-function ()
   '(and function
         #!+sb-eval (not sb!eval:interpreted-function)
-        #!+sb-eval (not sb!eval2:minimally-compiled-function)))
+        #!+sb-eval (not sb!eval-mc:minimally-compiled-function)))
