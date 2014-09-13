@@ -368,7 +368,8 @@ passing an ENVIRONMENT object as the argument."
                                            :execute))))
          (compiled (call-with-context context compiler))
          (prepared (prepare-form compiled)))
-    (call-with-environment (make-null-environment) prepared)))
+    (sb!c:with-compiler-error-resignalling
+      (call-with-environment (make-null-environment) prepared))))
 
 ;;;; UTILITY FUNCTIONS
 ;;;
