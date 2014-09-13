@@ -1,11 +1,5 @@
 (in-package "SB!EVAL-MC")
 
-(defmacro declaim-optimizations ()
-  `(declaim (optimize (debug 3) (space 2) (speed 2) (safety 0) (compilation-speed 0))))
-
-(declaim-optimizations)
-
-
 ;;;; SETTINGS
 (defparameter *debug-interpreter* nil
   "If true, preserve SB-EVAL-MC::EVAL-CLOSURE frames in stack traces.  Otherwise, generate human-readable stack frames of SB-EVAL-MC:MINIMALLY-COMPILED-FUNCTION calls suitable for debugging programs.")
@@ -35,7 +29,8 @@
                               `(eval-closure ,kind)
                               'eval-closure)
                          ,lambda-list
-      (declare (optimize sb!c::store-closure-debug-pointer))
+      (declare (optimize sb!c::store-closure-debug-pointer
+                         (debug 3)))
       ,@body)
     ,current-path
     ,source-loc))
@@ -46,7 +41,8 @@
   `(make-minimally-compiled-function
     ,name ,lambda-list ,doc ,source-loc ,current-path
     (sb!int:named-lambda minimally-compiled-function (sb!int:&more *more* *arg-count*)
-      (declare (optimize sb!c::store-closure-debug-pointer))
+      (declare (optimize sb!c::store-closure-debug-pointer
+                         (debug 3)))
       ,@body)))
 
 

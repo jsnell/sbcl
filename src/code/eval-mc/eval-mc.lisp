@@ -1,7 +1,5 @@
 (in-package "SB!EVAL-MC")
 
-(declaim-optimizations)
-
 ;;;; EVAL-CLOSURE PREPARATION
 ;;;
 ;;; The PREPARE-{...} functions generate EVAL-CLOSUREs from VM code
