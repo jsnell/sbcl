@@ -252,7 +252,8 @@ The result is a %LAMBDA VM code form for the supplied lambda expression."
                          ;; If all REQUIRED variables that we're
                          ;; binding are lexical, we can use
                          ;; %FETCH-ARGS to set them all at once.
-                         ,(if (disjointp specials required)
+                         ,(if (and (disjointp specials required)
+                                   (not (some #'globally-special-p required)))
                               `(,required  ;this instructs %let* to
                                            ;skip binding the REQUIRED
                                            ;variables
