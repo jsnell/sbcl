@@ -24,8 +24,7 @@
   #!+sb-eval
   (once-only ((x x))
     `(and (functionp ,x)
-          (not (sb!eval:interpreted-function-p ,x))
-          (not (sb!eval-mc:minimally-compiled-function-p ,x)))))
+          (not (sb!eval:interpreted-function-p ,x)))))
 
 (define-source-transform char-int (x)
   `(char-code ,x))
