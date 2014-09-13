@@ -198,8 +198,12 @@
 
 
 ;;;; DEBUGGING INFORMATION TRACKING
-(defvar *vcode-form-debug-info-mapping*
-  (make-hash-table :test 'eq :weakness :key))
+(defvar *vcode-form-debug-info-mapping* nil)
+
+(defmacro with-minimal-compiler-debug-tracking (&body body)
+  `(let ((*vcode-form-debug-info-mapping*
+          (make-hash-table :test 'eq)))
+     ,@body))
 
 (defun (setf vcode-form-debug-info) (val form)
   (setf (gethash form *vcode-form-debug-info-mapping*) val))

@@ -361,15 +361,16 @@ passing an ENVIRONMENT object as the argument."
 ;;; Main entry point
 
 (defun eval-in-native-environment (exp compiler-lexenv)
-  (let* ((context (native-environment->context compiler-lexenv))
-         (compiler (lambda ()
-                     (compile-form exp (if sb!impl::*eval-tlf-index*
-                                           :execute-tlf
-                                           :execute))))
-         (compiled (call-with-context context compiler))
-         (prepared (prepare-form compiled)))
-    (sb!c:with-compiler-error-resignalling
-      (call-with-environment (make-null-environment) prepared))))
+  (with-minimal-compiler-debug-tracking
+    (let* ((context (native-environment->context compiler-lexenv))
+           (compiler (lambda ()
+                       (compile-form exp (if sb!impl::*eval-tlf-index*
+                                             :execute-tlf
+                                             :execute))))
+           (compiled (call-with-context context compiler))
+           (prepared (prepare-form compiled)))
+      (sb!c:with-compiler-error-resignalling
+        (call-with-environment (make-null-environment) prepared)))))
 
 ;;;; UTILITY FUNCTIONS
 ;;;
@@ -377,29 +378,31 @@ passing an ENVIRONMENT object as the argument."
 ;;; debugging the evaluator or for use in implementations other than
 ;;; SBCL.
 (defun eval-mc (form &optional environment)
-  (let ((context (if environment
-                     (native-environment->context environment)
-                     (make-null-context)))
-        (env (make-null-environment)))
-    (call-with-environment
-     env
-     (prepare-form (with-context context (compile-form form :execute))))))
+  (with-minimal-compiler-debug-tracking
+    (let ((context (if environment
+                       (native-environment->context environment)
+                       (make-null-context)))
+          (env (make-null-environment)))
+      (call-with-environment
+       env
+       (prepare-form (with-context context (compile-form form :execute)))))))
 
 (defun load2 (file)
-  (if (streamp file)
-      (loop with eof = (gensym)
-            for form = (read file nil eof nil)
-            until (eq form eof)
-            when (listp form)
+  (with-minimal-compiler-debug-tracking
+    (if (streamp file)
+        (loop with eof = (gensym)
+              for form = (read file nil eof nil)
+              until (eq form eof)
+              when (listp form)
               do (format t "~&; (~S~:[~; ~S~:[~; ...~]~])"
                          (car form) (cdr form) (cadr form) (cddr form))
-            do (funcall
-                (prepare-form
-                 (with-context (make-null-context)
-                   (compile-form form :not-compile-time)))
-                (make-null-environment)))
-      (with-open-file (in file)
-        (load2 in))))
+              do (funcall
+                  (prepare-form
+                   (with-context (make-null-context)
+                     (compile-form form :not-compile-time)))
+                  (make-null-environment)))
+        (with-open-file (in file)
+          (load2 in)))))
 
 
 ;;;; EXAMPLES
