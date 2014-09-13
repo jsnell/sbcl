@@ -1,9 +1,22 @@
+;;;; A minimally compiling EVAL (SBCL specific parts). Porting the evaluator
+;;;; to another implementation will ideally require just implementing these
+;;;; interfaces.
+
+;;;; This software is part of the SBCL system. See the README file for
+;;;; more information.
+;;;;
+;;;; While most of SBCL is derived from the CMU CL system, this file was
+;;;; written from scratch after the fork from CMU CL.
+;;;;
+;;;; The software is in the public domain and is provided with
+;;;; absolutely no warranty. See the COPYING and CREDITS files for
+;;;; more information.
+
 (in-package "SB!EVAL-MC")
 
 ;;;; SETTINGS
 (defparameter *debug-interpreter* nil
   "If true, preserve SB-EVAL-MC::EVAL-CLOSURE frames in stack traces.  Otherwise, generate human-readable stack frames of SB-EVAL-MC:MINIMALLY-COMPILED-FUNCTION calls suitable for debugging programs.")
-
 
 ;;;; COMPILE-TIME CONSTANTS
 ;;;
