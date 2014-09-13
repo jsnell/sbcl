@@ -113,6 +113,10 @@ children of CONTEXT can be stack-allocated."
   (when (eq (first declaration) 'special)
     (rest declaration)))
 
+(defun decl-policy (declaration)
+  (when (eq (first declaration) 'optimize)
+    (rest declaration)))
+
 (defun parse-tagbody-tags-and-bodies (forms)
   (let ((next-form (gensym))
         (finishp nil))

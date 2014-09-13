@@ -147,12 +147,23 @@
   (lexicals nil :type list)
   ;; A list of variables locally declared SPECIAL in this context.
   (specials nil :type list)
+  ;; A list of optimization policy overrides.
+  (policy nil :type list)
   ;; The environment for COMPILER-LET, accessible from locally defined
   ;; macros.
   (%evaluation-environment nil :type (or null environment))
   ;; The context corresponding to the %EVALUATION-ENVIRONMENT, used
   ;; for compiling locally defined macros.
   (%evaluation-context nil :type (or null context)))
+
+(sb!int:def!method print-object ((context context) stream)
+  (print-unreadable-object (context stream :type t :identity t)
+    (format stream ":SYMBOL-MACROS ~S :MACROS ~S :LEXICALS ~S :SPECIALS ~S :POLICY ~S"
+            (context-symbol-macros context)
+            (context-macros context)
+            (context-lexicals context)
+            (context-specials context)
+            (context-policy context))))
 
 (defun make-null-context ()
   (make-context nil))
@@ -168,6 +179,9 @@
 ;;; Most of the functions that augment a context return a new context
 ;;; with the existing one as the parent.  Exceptions are marked with a
 ;;; ! in the name (such as CONTEXT-ADD-SPECIAL!).
+;;;
+;;; FIXME: This interface feels a bit awkward, since you'll often want
+;;; to augment the context in multiple ways.
 
 ;;; Evaluation environment
 (defun context-evaluation-environment (context)
@@ -235,6 +249,11 @@
           (append bindings (context-macros new-context)))
     new-context))
 
+(defun context-add-policy (context policy)
+  (let ((new-context (make-context context)))
+    (setf (context-policy new-context)
+          (append policy (context-policy context)))
+    new-context))
 
 ;;; Lexical information
 (defun context-var-symbol-macro-p (context var)

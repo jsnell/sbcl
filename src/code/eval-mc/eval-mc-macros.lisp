@@ -41,11 +41,13 @@
        (declare (fixnum ,size%))
        ,@body)))
 
-(defmacro with-parsed-body ((forms-var specials-var) exprs &body body)
-  "Parse EXPRS as a list of declarations and forms.  Execute BODY with FORMS-VAR bound to the list of forms and SPECIALS-VAR bound to the list of variables declared special by the parsed declarations."
+(defmacro with-parsed-body ((forms-var specials-var policy-var) exprs &body body)
+  "Parse EXPRS as a list of declarations and forms. Execute BODY with FORMS-VAR bound to the list of forms, SPECIALS-VAR bound to the list of variables declared special by the parsed declarations, and POLICY-VAR bound to a list of declared optimization policy settings."
   (let ((decls (gensym)))
     `(multiple-value-bind (,decls ,forms-var) (body-decls&forms ,exprs)
-       (let ((,specials-var (mapcan #'decl-specials ,decls)))
+       (let ((,specials-var (reduce #'append (mapcar #'decl-specials ,decls)))
+             (,policy-var (reduce #'append (mapcar #'decl-policy ,decls))))
+         (declare (ignorable ,policy-var))
          ,@body))))
 
 (defmacro with-context (context &body body)

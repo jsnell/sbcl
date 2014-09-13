@@ -234,14 +234,15 @@ The result is a %LAMBDA VM code form for the macroexpander."
 
 The result is a %LAMBDA VM code form for the supplied lambda expression."
   (destructuring-bind (lambda-list &rest exprs) lambda-form
-    (with-parsed-body (body specials) exprs
+    (with-parsed-body (body specials policy) exprs
       (multiple-value-bind (required optional restp rest keyp keys allowp auxp aux
                             morep more-context more-count)
           (parse-lambda-list lambda-list)
         (declare (ignore more-context more-count))
         (declare (ignorable auxp morep))
         (setq rest (or rest (gensym "REST")))
-        (let* ((required-num (length required))
+        (let* ((*context* (context-add-policy *context* policy))
+               (required-num (length required))
                (optional-num (length optional))
                (varspecs (list)))
           (setq varspecs (nreverse varspecs))
@@ -514,9 +515,10 @@ Do not call this function directly.  Call COMPILE-FORM instead."
                                   `(%set-var ,var ,valform)))))))
            ((flet labels)
             (destructuring-bind (bindings &rest exprs) (rest form)
-              (with-parsed-body (body specials) exprs
+              (with-parsed-body (body specials policy) exprs
                 (declare (ignore specials))
                 (let* ((function-names (mapcar #'first bindings))
+                       (*context* (context-add-policy *context* policy))
                        (body-context (context-add-env-lexicals
                                       *context*
                                       (mapcar #'(lambda (name)
@@ -550,7 +552,7 @@ Do not call this function directly.  Call COMPILE-FORM instead."
                                   (&optional noinit-vars &rest init-block)
                                   bindings &rest exprs)
                  (rest form)
-               (with-parsed-body (body specials) exprs
+               (with-parsed-body (body specials policy) exprs
                  (let* ((real-bindings (mapcar (lambda (form)
                                                  (if (listp form)
                                                      (cons (first form) (second form))
@@ -558,6 +560,7 @@ Do not call this function directly.  Call COMPILE-FORM instead."
                                                bindings))
                         (vars (mapcar #'car real-bindings))
                         (varnum (length vars))
+                        (*context* (context-add-policy *context* policy))
                         (binding-context
                           (context-add-env-lexicals *context* (list)))
                         (body-context
@@ -614,8 +617,10 @@ Do not call this function directly.  Call COMPILE-FORM instead."
                `(load-time-value ,(compile-form form))))
             ((locally)
              (destructuring-bind (&rest exprs) (rest form)
-               (with-parsed-body (body specials) exprs
-                 (with-context (context-add-specials *context* specials)
+               (with-parsed-body (body specials policy) exprs
+                 (with-context (context-add-policy
+                                (context-add-specials *context* specials)
+                                policy)
                    (compile-progn body mode)))))
             ((multiple-value-setq)
              (destructuring-bind (vars values-form) (rest form)
@@ -624,14 +629,15 @@ Do not call this function directly.  Call COMPILE-FORM instead."
                    (compile-form `(values ,values-form)))))
             ((multiple-value-bind)
              (destructuring-bind (vars values-form &rest exprs) (rest form)
-               (with-parsed-body (body specials) exprs
-                 (compile-form
-                  (let ((rsym (gensym)))
-                    `(multiple-value-call
-                         (lambda (&optional ,@vars &rest ,rsym)
-                           (declare (special ,@specials) (ignore ,rsym))
-                           ,@body)
-                       ,values-form))))))
+               (with-parsed-body (body specials policy) exprs
+                 (let ((*context* (context-add-policy *context* policy)))
+                   (compile-form
+                    (let ((rsym (gensym)))
+                      `(multiple-value-call
+                           (lambda (&optional ,@vars &rest ,rsym)
+                             (declare (special ,@specials) (ignore ,rsym))
+                             ,@body)
+                         ,values-form)))))))
             ((quote)
              form)
             (#.*impl-named-lambda-syms*
@@ -640,7 +646,7 @@ Do not call this function directly.  Call COMPILE-FORM instead."
              (compile-lambda (cdaddr form) :name (cadr form)))
             ((symbol-macrolet)
              (destructuring-bind (bindings &rest exprs) (rest form)
-               (with-parsed-body (body specials) exprs
+               (with-parsed-body (body specials policy) exprs
                  (let ((bindings (mapcar (lambda (form)
                                            (destructuring-bind (var macro-form) form
                                              (when (or (globally-special-p var)
@@ -654,13 +660,15 @@ Do not call this function directly.  Call COMPILE-FORM instead."
                                                       :format-arguments (list var)))
                                              (cons var macro-form)))
                                          bindings)))
-                   (with-context (context-add-specials
-                                  (context-add-symbol-macros *context* bindings)
-                                  specials)
+                   (with-context (context-add-policy
+                                  (context-add-specials
+                                   (context-add-symbol-macros *context* bindings)
+                                   specials)
+                                  policy)
                      (compile-progn body mode))))))
             ((macrolet)
              (destructuring-bind (bindings &rest exprs) (rest form)
-               (with-parsed-body (body specials) exprs
+               (with-parsed-body (body specials policy) exprs
                  (let ((bindings (mapcar (lambda (macro-form)
                                            (cons (first macro-form)
                                                  (call-with-environment
@@ -672,10 +680,11 @@ Do not call this function directly.  Call COMPILE-FORM instead."
                                                      (compile-macro-lambda
                                                       (first macro-form)
                                                       (rest macro-form)))))))
-                                         bindings)))
+                                         bindings))
+                       (*context* (context-add-policy *context* policy)))
                    (with-context (context-add-specials
-                                  (context-add-macros *context* bindings)
-                                  specials)
+                                   (context-add-macros *context* bindings)
+                                   specials)
                      (compile-progn body mode))))))
             (#.`(compiler-let ,@*impl-compiler-let-syms*)
              (destructuring-bind (bindings &rest body) (rest form)
