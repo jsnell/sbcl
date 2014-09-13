@@ -430,6 +430,8 @@
  ("src/code/early-full-eval")
  #!+sb-eval
  ("src/code/eval-mc/early-eval-mc")
+ #!+sb-eval
+ ("src/code/eval-mc/eval-mc-sbcl"         :not-host)
 
  ("src/code/typep" :not-host)
 
@@ -655,21 +657,6 @@
  ;; files which depend in some way (directly or indirectly) on stuff
  ;; compiled as part of the compiler
 
- #!+sb-eval
- ("src/code/eval-mc/eval-mc-macros"       :not-host)
- #!+sb-eval
- ("src/code/eval-mc/eval-mc-types"        :not-host)
- #!+sb-eval
- ("src/code/eval-mc/eval-mc-util"         :not-host)
- #!+sb-eval
- ("src/code/eval-mc/eval-mc-sbcl"         :not-host)
- #!+sb-eval
- ("src/code/eval-mc/eval-mc"              :not-host)
- #!+sb-eval
- ("src/code/eval-mc/eval-mc-transformers" :not-host)
- #!+sb-eval
- ("src/code/eval-mc/eval-mc-compiler"     :not-host)
-
  ("src/code/late-extensions") ; needs condition system
  ("src/compiler/generic/target-core" :not-host) ; uses stuff from
                                                 ;   "compiler/generic/core"
@@ -745,6 +732,18 @@
 
  #!+sb-eval
  ("src/code/full-eval"   :not-host) ; uses INFO, ARG-COUNT-ERROR
+ #!+sb-eval
+ ("src/code/eval-mc/eval-mc-macros"       :not-host)
+ #!+sb-eval
+ ("src/code/eval-mc/eval-mc-types"        :not-host)
+ #!+sb-eval
+ ("src/code/eval-mc/eval-mc-util"         :not-host)
+ #!+sb-eval
+ ("src/code/eval-mc/eval-mc"              :not-host)
+ #!+sb-eval
+ ("src/code/eval-mc/eval-mc-transformers" :not-host)
+ #!+sb-eval
+ ("src/code/eval-mc/eval-mc-compiler"     :not-host)
 
  ("src/code/bit-bash"    :not-host) ; needs %NEGATE from assembly/target/arith
 

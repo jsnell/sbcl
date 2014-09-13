@@ -3011,7 +3011,8 @@ structure representations"
       :doc "internal: the evaluator implementation used to execute code without compiling it."
       :use ("CL")
       :import-from (("SB!C" "SIMPLE-PROGRAM-ERROR"))
-      :export ("PREPARE-FORM"
+      :export ("EVAL-IN-NATIVE-ENVIRONMENT"
+               "PREPARE-FORM"
                "COMPILE-FORM"
                "MAKE-NULL-ENVIRONMENT"
                "MAKE-NULL-CONTEXT"
@@ -3025,9 +3026,7 @@ structure representations"
                "MINIMALLY-COMPILED-FUNCTION-LAMBDA-LIST"
                "MINIMALLY-COMPILED-FUNCTION-DOCUMENTATION"
                "MINIMALLY-COMPILED-FUNCTION-SOURCE-LOCATION"
-               "MINIMALLY-COMPILED-FUNCTION-SOURCE-PATH"
-               "EVAL-MC"
-               "LOAD2"))
+               "MINIMALLY-COMPILED-FUNCTION-SOURCE-PATH"))
 
    #!+win32
    #s(sb-cold:package-data

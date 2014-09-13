@@ -252,7 +252,6 @@ See %COMPILE-FORM for more detailed documentation."
       (attach-debug-info compiled-form (cons (current-path) (current-location))))
     compiled-form))
 
-(declaim (ftype (function (*) eval-closure) prepare-form))
 (defun prepare-form (vcode)
   "Compile VCODE from VM code into a funcallable evaluator for VCODE.
 

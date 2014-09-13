@@ -358,6 +358,17 @@ passing an ENVIRONMENT object as the argument."
               (prepare-global-call f args))))))))
    t))
 
+;;; Main entry point
+
+(defun eval-in-native-environment (exp compiler-lexenv)
+  (let* ((context (native-environment->context compiler-lexenv))
+         (compiler (lambda ()
+                     (compile-form exp (if sb!impl::*eval-tlf-index*
+                                           :execute-tlf
+                                           :execute))))
+         (compiled (call-with-context context compiler))
+         (prepared (prepare-form compiled)))
+    (call-with-environment (make-null-environment) prepared)))
 
 ;;;; UTILITY FUNCTIONS
 ;;;
