@@ -28,27 +28,35 @@
       (format stream "~A ~A" '#:minimally-compiled-function
               (minimally-compiled-function-name obj)))))
 
+;; An internal variable set by the implementation of LET to track
+;; special variables to bind.
 (defvar *dyn-vars*)
-;;"An internal variable set by the implementation of LET to track special variables to bind."
-(defvar *dyn-vals*)
-;;"An internal variable set by the implementation of LET to track values to bind to special variables."
 
-(declaim (type (member :execute :execute-tlf :compile-time-too :not-compile-time) *mode*))
+;; An internal variable set by the implementation of LET to track
+;; values to bind to special variables.
+(defvar *dyn-vals*)
+
+(declaim (type (member :execute :execute-tlf :compile-time-too :not-compile-time)
+               *mode*))
 (defvar *mode* :execute
   "The processing mode for COMPILE-FORM.")
 
-;;(declaim (type context *context*))
-(defvar *context*
-  "The current lexical context.  Only valid in the dynamic context of a COMPILE-FORM call.")
+;; The current lexical context.  Only valid in the dynamic context of
+;; a COMPILE-FORM call.
+(defvar *context*)
 
 (declaim (type integer *more* *arg-count*))
-(defvar *more*)
-;;"The &MORE argument context of the currently executing MINIMALLY-COMPILED-FUNCTION."
-(defvar *arg-count*)
-;;"The argument count of the currently executing MINIMALLY-COMPILED-FUNCTION."
 
-;;(declaim (type (simple-array environment ()) *envbox*))
-(defvar *env-box*)
-;;"A box containing a pointer to the environment of the currently executing MINIMALLY-COMPILED-FUNCTION.
+;; The &MORE argument context of the currently executing
+;; MINIMALLY-COMPILED-FUNCTION.
+(defvar *more*)
+
+;; The argument count of the currently executing
+;; MINIMALLY-COMPILED-FUNCTION.
+(defvar *arg-count*)
+
+;; A box containing a pointer to the environment of the currently
+;; executing MINIMALLY-COMPILED-FUNCTION.
 ;;
-;;This is used for debugging purposes only."
+;; This is used for debugging purposes only.
+(defvar *env-box*)
