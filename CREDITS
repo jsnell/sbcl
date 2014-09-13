@@ -524,6 +524,10 @@ Zach Beane:
   original timer facility on which SBCL's timers are based. and also
   contributed the :SAVE-RUNTIME-OPTIONS support for SAVE-LISP-AND-DIE.
 
+Matthias Benkard:
+  He wrote the minimally compiling evaluator as part of Google's Summer of
+  Code 2013.
+
 James Bielman:
   He assisted in work on the port to the Windows operating system, and
   was instrumental in :EXECUTABLE support for SAVE-LISP-AND-DIE.
