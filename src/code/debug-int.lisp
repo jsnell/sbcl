@@ -788,16 +788,20 @@
         (t
          (frame-find-upframe-if predicate (frame-up frame)))))
 
-
-;;;
-;;;
+;;; Filter away frames that correspond to the internals of the
+;;; minimally compiling interpreter, except for select frames which
+;;; are replaced with an interpreted-frame object. Dig out information
+;;; from the compiled debug info to surface the information relevant
+;;; to the user, rather than show the interpreter guts.
 (defun possibly-an-interpreted-frame (frame up-frame)
+  ;; If *DEBUG-INTERPRETER* is true, give out the raw unfiltered frames.
   (when sb!eval-mc::*debug-interpreter*
     (return-from possibly-an-interpreted-frame
       frame))
   (when (null frame)
     (return-from possibly-an-interpreted-frame
       nil))
+  ;; Interpreter internals -- descend further down.
   (when (or (equal (debug-fun-name (frame-debug-fun frame))
                    '(sb!c::&more-processor
                      (labels sb!eval-mc::iter :in sb!eval-mc::prepare-lambda)))
@@ -815,11 +819,14 @@
                      (first (debug-fun-name (frame-debug-fun frame))))))
     (return-from possibly-an-interpreted-frame
       (frame-down frame)))
+  ;; A frame that's not related to the interpreter.
   (unless (eq (debug-fun-name (frame-debug-fun frame))
               'sb!eval-mc::minimally-compiled-function)
     (return-from possibly-an-interpreted-frame
       frame))
-  (let ((eval-closure-frame
+  (let* (;; All frames related to the same MINIMALLY-COMPILED-FUNCTION that
+         ;; have valid debug info.
+         (eval-closure-frames
           (labels ((checked-frame-closure-vars (frame)
                      (let ((closure? (frame-closure-vars frame)))
                        (typecase closure?
@@ -833,11 +840,12 @@
                            (and (listp fname)
                                 (eq 'sb!eval-mc::eval-closure (first fname))))))
                    (interpreted-call-frame-p (frame)
-                     (eq (debug-fun-name (frame-debug-fun frame))
-                         'sb!eval-mc::minimally-compiled-function))
+                     (or (typep frame 'interpreted-frame)
+                         (eq (debug-fun-name (frame-debug-fun frame))
+                             'sb!eval-mc::minimally-compiled-function)))
                    (has-debug-info-p (frame)
                      (let ((closure?
-                             (checked-frame-closure-vars frame)))
+                            (checked-frame-closure-vars frame)))
                        (and closure? (sb!eval-mc::source-path closure?))))
                    (collect-descendent-eval-closure-frames (frame)
                      (if (or (null frame)
@@ -849,11 +857,11 @@
                            (if (eval-closure-frame-p frame)
                                (cons frame more-frames)
                                more-frames)))))
-            (first
-             (last
-              (remove-if-not #'has-debug-info-p
-                             (collect-descendent-eval-closure-frames
-                              (frame-up frame))))))))
+            (remove-if-not #'has-debug-info-p
+                           (collect-descendent-eval-closure-frames
+                            (frame-up frame)))))
+         ;; We want the frame that's furthest up.
+         (eval-closure-frame (first (last eval-closure-frames))))
     (if (null eval-closure-frame)
         (frame-down frame)
         (let* ((debug-fun (frame-debug-fun frame))
@@ -866,25 +874,25 @@
                (more-context (debug-var-value (first more-info) frame))
                (more-count (debug-var-value (second more-info) frame))
                (args
-                 (multiple-value-list (sb!c:%more-arg-values more-context 0 more-count)))
+                (multiple-value-list (sb!c:%more-arg-values more-context 0 more-count)))
                (call-debug-vars
-                 (compute-interpreted-debug-vars call-env))
+                (compute-interpreted-debug-vars call-env))
                (eval-debug-vars
-                 (compute-interpreted-debug-vars eval-env))
+                (compute-interpreted-debug-vars eval-env))
                (interpreted-debug-fun
-                 (make-interpreted-debug-fun
-                  :%lambda-list-gen (lambda ()
-                                      (compute-interpreted-lambda-list
-                                       call-debug-vars
-                                       (sb!eval-mc::debug-record-lambda-list call-debug-info)
-                                       args))
-                  :%debug-vars eval-debug-vars
-                  :%function (frame-closure-vars frame)
-                  :%name (and call-debug-info (sb!eval-mc::debug-record-function-name call-debug-info))
-                  :eval-closure closure))
+                (make-interpreted-debug-fun
+                 :%lambda-list-gen (lambda ()
+                                     (compute-interpreted-lambda-list
+                                      call-debug-vars
+                                      (sb!eval-mc::debug-record-lambda-list call-debug-info)
+                                      args))
+                 :%debug-vars eval-debug-vars
+                 :%function (frame-closure-vars frame)
+                 :%name (and call-debug-info (sb!eval-mc::debug-record-function-name call-debug-info))
+                 :eval-closure closure))
                (code-location
-                 (compute-interpreted-code-location interpreted-debug-fun
-                                                    source-path)))
+                (compute-interpreted-code-location interpreted-debug-fun
+                                                   source-path)))
           (setf (debug-fun-blocks interpreted-debug-fun)
                 (vector (make-interpreted-debug-block
                          :code-locations (vector code-location)
@@ -892,13 +900,12 @@
                          :source-path source-path)))
           (if call-debug-info
               (let ((interpreted-frame
-                      (make-interpreted-frame
-                       up-frame
-                       interpreted-debug-fun
-                       code-location
-                       (frame-number frame)
-                       frame
-                       eval-env)))
+                     (make-interpreted-frame up-frame
+                                             interpreted-debug-fun
+                                             code-location
+                                             (frame-number frame)
+                                             frame
+                                             eval-env)))
                 interpreted-frame)
               frame)))))
 
@@ -2846,6 +2853,7 @@ register."
                :invalid
                :valid)))))
 
+;;; Find the closure pointer for the frame, if it was stored on the stack.
 (defun frame-closure-vars (frame)
   (let* ((debug-fun (frame-debug-fun frame))
          (compiler-debug-fun (compiled-debug-fun-compiler-debug-fun debug-fun))
