@@ -39,6 +39,9 @@
 ;;; Maps compiled closures to source locations.
 (defvar *closure-debug-info* nil)
 
+;;; A SB-C:DEFINITION-SOURCE-LOCATION for the current form.
+(defvar *source-location* nil)
+
 ;;;; PREPARE-FORM UTILITIES
 (defmacro eval-lambda (lambda-list (&optional kind current-path source-loc) &body body)
   "Create an EVAL-CLOSURE with body BODY and attach source code information."
@@ -206,7 +209,8 @@
 
 (defmacro with-minimal-compiler-debug-tracking (&body body)
   `(let ((*vcode-form-debug-info-mapping* (make-hash-table :test 'eq))
-         (*closure-debug-info* (make-hash-table :test #'eq)))
+         (*closure-debug-info* (make-hash-table :test #'eq))
+         (*source-location* (sb!c::make-definition-source-location)))
      ,@body))
 
 (defun (setf vcode-form-debug-info) (val form)
@@ -228,7 +232,7 @@
   (when (and (current-path)
              (typep (car (last (current-path)))
                     '(or fixnum null)))
-    (sb!c::make-definition-source-location)))
+    *source-location*))
 
 (defun closure-debug-info (fun closure)
   (let ((debug-info (minimally-compiled-function-closure-debug-info fun)))
