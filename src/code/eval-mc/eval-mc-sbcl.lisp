@@ -241,7 +241,7 @@
     (gethash closure *source-paths&locations*)))
 
 (defun (setf source-path&location) (val closure)
-  (progn ;;sb-ext:with-locked-hash-table (*source-paths&locations*)
+  (when val
     (setf (gethash closure *source-paths&locations*) val)))
 
 (defun annotate-lambda-with-source (closure current-path source-location)
