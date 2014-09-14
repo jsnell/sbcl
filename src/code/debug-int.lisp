@@ -315,7 +315,8 @@
             (:copier nil))
   %name
   %lambda-list-gen
-  eval-closure)
+  eval-closure
+  source-location)
 
 (defstruct (compiled-debug-fun
             (:include debug-fun)
@@ -824,7 +825,9 @@
               'sb!eval-mc::minimally-compiled-function)
     (return-from possibly-an-interpreted-frame
       frame))
-  (let* (;; All frames related to the same MINIMALLY-COMPILED-FUNCTION that
+  (let* ((call-env (interpreted-call-frame-environment frame))
+         (fun (sb!eval-mc::environment-function call-env))
+         ;; All frames related to the same MINIMALLY-COMPILED-FUNCTION that
          ;; have valid debug info.
          (eval-closure-frames
           (labels ((checked-frame-closure-vars (frame)
@@ -846,7 +849,7 @@
                    (has-debug-info-p (frame)
                      (let ((closure?
                             (checked-frame-closure-vars frame)))
-                       (and closure? (sb!eval-mc::source-path closure?))))
+                       (and closure? (sb!eval-mc::closure-source-path fun closure?))))
                    (collect-descendent-eval-closure-frames (frame)
                      (if (or (null frame)
                              (interpreted-call-frame-p frame))
@@ -866,8 +869,8 @@
         (frame-down frame)
         (let* ((debug-fun (frame-debug-fun frame))
                (closure (frame-closure-vars eval-closure-frame))
-               (source-path (sb!eval-mc::source-path closure))
-               (call-env (interpreted-call-frame-environment frame))
+               (source-path (sb!eval-mc::closure-source-path fun closure))
+               (source-location (sb!eval-mc::closure-source-location fun closure))
                (eval-env (interpreter-frame-environment eval-closure-frame))
                (call-debug-info (and call-env (sb!eval-mc::environment-debug-record call-env)))
                (more-info (cdar (compiled-debug-fun-lambda-list (frame-debug-fun frame))))
@@ -889,7 +892,8 @@
                  :%debug-vars eval-debug-vars
                  :%function (frame-closure-vars frame)
                  :%name (and call-debug-info (sb!eval-mc::debug-record-function-name call-debug-info))
-                 :eval-closure closure))
+                 :eval-closure closure
+                 :source-location source-location))
                (code-location
                 (compute-interpreted-code-location interpreted-debug-fun
                                                    source-path)))
@@ -908,31 +912,6 @@
                                              eval-env)))
                 interpreted-frame)
               frame)))))
-
-
-;;;
-;;;
-(defun eval-closure-debug-info (closure)
-  (sb!c::make-debug-info
-   :name nil
-   :source (eval-closure-debug-source closure)))
-
-
-;;;
-;;;
-(defun eval-closure-debug-source (closure)
-  (let ((source-loc (sb!eval-mc::source-location closure)))
-    (if source-loc
-        (sb!c::make-debug-source
-         :namestring (sb!c::definition-source-location-namestring source-loc)
-         :created nil
-         :source-root 0
-         :start-positions nil
-         :form nil                      ;FIXME
-         :function closure
-         :compiled 0)
-        nil)))
-
 
 ;;; Return the top frame of the control stack as it was before calling
 ;;; this function.
@@ -2122,7 +2101,20 @@ register."
                   (return (svref blocks (1- i)))))))))
 
 (defun interpreted-debug-fun-debug-info (debug-fun)
-  (eval-closure-debug-info (interpreted-debug-fun-eval-closure debug-fun)))
+  (let* ((source-loc (interpreted-debug-fun-source-location debug-fun))
+         (closure (interpreted-debug-fun-eval-closure debug-fun))
+         (debug-source
+          (when source-loc
+            (sb!c::make-debug-source
+             :namestring (sb!c::definition-source-location-namestring source-loc)
+             :created nil
+             :source-root 0
+             :start-positions nil
+             :form nil                      ;FIXME
+             :function closure
+             :compiled 0))))
+    (sb!c::make-debug-info :name nil
+                           :source debug-source)))
 
 ;;; Return the CODE-LOCATION's DEBUG-SOURCE.
 (defun code-location-debug-source (code-location)
@@ -2354,8 +2346,8 @@ register."
 (defun interpreted-debug-var-value (debug-var frame)
   (declare (ignore frame))
   (sb!eval-mc::environment-value (interpreted-debug-var-env debug-var)
-                               (interpreted-debug-var-level debug-var)
-                               (interpreted-debug-var-offset debug-var)))
+                                 (interpreted-debug-var-level debug-var)
+                                 (interpreted-debug-var-offset debug-var)))
 
 (defun compiled-debug-var-value (debug-var frame)
   (aver (typep frame 'compiled-frame))

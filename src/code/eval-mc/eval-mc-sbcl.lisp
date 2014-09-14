@@ -33,6 +33,11 @@
   (defvar *impl-named-function-syms* '())
   (defvar *impl-the-syms* '(sb!ext:truly-the)))
 
+;;; Maps intermediate code forms to source locations.
+(defvar *vcode-form-debug-info-mapping* nil)
+
+;;; Maps compiled closures to source locations.
+(defvar *closure-debug-info* nil)
 
 ;;;; PREPARE-FORM UTILITIES
 (defmacro eval-lambda (lambda-list (&optional kind current-path source-loc) &body body)
@@ -56,8 +61,8 @@
     (sb!int:named-lambda minimally-compiled-function (sb!int:&more *more* *arg-count*)
       (declare (optimize sb!c::store-closure-debug-pointer
                          (debug 3)))
-      ,@body)))
-
+      ,@body)
+    *closure-debug-info*))
 
 ;;;; HOST INTEROPERABILITY
 (defun native-environment->context (lexenv)
@@ -197,12 +202,11 @@
   (sb!c::fdefn-fun fdefn))
 
 
-;;;; DEBUGGING INFORMATION TRACKING
-(defvar *vcode-form-debug-info-mapping* nil)
+;;;; DEBUG INFORMATION TRACKING
 
 (defmacro with-minimal-compiler-debug-tracking (&body body)
-  `(let ((*vcode-form-debug-info-mapping*
-          (make-hash-table :test 'eq)))
+  `(let ((*vcode-form-debug-info-mapping* (make-hash-table :test 'eq))
+         (*closure-debug-info* (make-hash-table :test #'eq)))
      ,@body))
 
 (defun (setf vcode-form-debug-info) (val form)
@@ -214,11 +218,7 @@
 (defun attach-debug-info (form current-path)
   (setf (vcode-form-debug-info form) current-path))
 
-
 ;;;; SOURCE LOCATION TRACKING
-(defvar *source-paths&locations* (make-hash-table :weakness :key
-                                                  :test #'eq
-                                                  :synchronized t))
 
 (defun current-path ()
   (when (boundp 'sb!c::*current-path*)
@@ -230,19 +230,20 @@
                     '(or fixnum null)))
     (sb!c::make-definition-source-location)))
 
-(defun source-path (closure)
-  (car (source-path&location closure)))
+(defun closure-debug-info (fun closure)
+  (let ((debug-info (minimally-compiled-function-closure-debug-info fun)))
+    (when debug-info
+      (gethash closure debug-info))))
 
-(defun source-location (closure)
-  (cdr (source-path&location closure)))
-
-(defun source-path&location (closure)
-  (progn ;;sb-ext:with-locked-hash-table (*source-paths&locations*)
-    (gethash closure *source-paths&locations*)))
-
-(defun (setf source-path&location) (val closure)
+(defun (setf closure-debug-info) (val closure)
   (when val
-    (setf (gethash closure *source-paths&locations*) val)))
+    (setf (gethash closure *closure-debug-info*) val)))
+
+(defun closure-source-path (fun closure)
+  (car (closure-debug-info fun closure)))
+
+(defun closure-source-location (fun closure)
+  (cdr (closure-debug-info fun closure)))
 
 (defun annotate-lambda-with-source (closure current-path source-location)
   (when source-location
@@ -250,9 +251,8 @@
     ;; ever be a non-fixnum.  This seemingly occurs only in the
     ;; context of #. evaluation (where *source-path* etc. are bound
     ;; but not relevant for the form we are processing).
-    (setf (source-path&location closure) (cons current-path source-location)))
+    (setf (closure-debug-info closure) (cons current-path source-location)))
   closure)
-
 
 ;;;; ENTRY POINT WRAPPERS
 ;;;
@@ -282,5 +282,5 @@ See %COMPILE-FORM for more detailed documentation."
 See %PREPARE-FORM for more detailed documentation."
   (let* ((eval-closure (%prepare-form vcode))
          (path&location (vcode-form-debug-info vcode)))
-    (setf (source-path&location eval-closure) path&location)
+    (setf (closure-debug-info eval-closure) path&location)
     eval-closure))

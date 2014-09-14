@@ -116,16 +116,22 @@ that, when the MINIMALLY-COMPILED-FUNCTION is executed, is set to
 point to the environment that corresponds to the call frame for this
 call instance."
   (declare (ignorable name current-path source-location))
-  (let ((body* (prepare-progn body)))
+  (let ((body* (prepare-progn body))
+        (closure-debug-info *closure-debug-info*))
     (eval-lambda (env) (%lambda current-path source-location)
       (let (;; ENVBOX holds a box that points to the lambda's body
             ;; environment.  It is set by the body %LET.
             ;;
             ;; This is useful mainly for debugging purposes.
-            (envbox (make-array '())))
-        (interpreted-lambda (name current-path source-location lambda-list doc)
-          (let ((*env-box* envbox))
-            (funcall body* env)))))))
+            (envbox (make-array '()))
+            ;; We might no longer be within the dynamic extent of the
+            ;; original call to WITH-MINIMAL-COMPILER-DEBUG-TRACKING.
+            ;; So fetch the information that we stored when preparing.
+            (*closure-debug-info* closure-debug-info))
+        (setf (environment-%function env)
+              (interpreted-lambda (name current-path source-location lambda-list doc)
+                (let ((*env-box* envbox))
+                  (funcall body* env))))))))
 
 (declaim (ftype (function (*) eval-closure) %prepare-form))
 (defun %prepare-form (form)

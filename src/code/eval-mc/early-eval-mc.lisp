@@ -14,7 +14,10 @@
 
 (sb!kernel::!defstruct-with-alternate-metaclass
  minimally-compiled-function
- :slot-names (name lambda-list documentation source-location source-path)
+ :slot-names (name lambda-list documentation source-location source-path
+                   ;; ALIST of (CLOSURE . SOURCE-LOCATION) pairs for each
+                   ;; component closure of this function.
+                   closure-debug-info)
  :boa-constructor %make-minimally-compiled-function
  :superclass-name function
  :metaclass-name sb!kernel:static-classoid
@@ -25,9 +28,11 @@
 #-sb-xc-host
 (progn
   (defun make-minimally-compiled-function
-      (name lambda-list documentation source-location source-path function)
+      (name lambda-list documentation source-location source-path function
+       closure-debug-info)
     (let ((mincfun (%make-minimally-compiled-function
-                    name lambda-list documentation source-location source-path)))
+                    name lambda-list documentation source-location source-path
+                    closure-debug-info)))
       (setf (sb!kernel:funcallable-instance-fun mincfun) function)
       mincfun))
 

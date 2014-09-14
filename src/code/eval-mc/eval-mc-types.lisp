@@ -62,7 +62,8 @@
                             (debug-record parent data)))
   (debug-record nil :type (or null debug-record))
   (parent nil :type (or null environment))
-  (data nil :type simple-vector))
+  (data nil :type simple-vector)
+  (%function nil :type (or null minimally-compiled-function)))
 
 (declaim (inline make-null-environment))
 (defun make-null-environment ()
@@ -96,6 +97,11 @@
     (setq env (environment-parent env)))
   (setf (svref (environment-data env) offset) val))
 
+(defun environment-function (environment)
+  (let ((fun (environment-%function environment))
+        (parent (environment-parent environment)))
+    (cond (fun fun)
+          (parent (environment-function parent)))))
 
 ;;;; CONTEXTS
 ;;;
