@@ -148,6 +148,13 @@ call instance."
                 (let ((*env-box* envbox))
                   (funcall body* env))))))))
 
+(declaim (ftype (function (fixnum fixnum *) eval-closure) prepare-lexical-set))
+(defun prepare-block (catch-tag body)
+  (let ((body* (prepare-progn body)))
+    (eval-lambda (env) (%env-set)
+      (catch catch-tag
+        (funcall body* env)))))
+
 (declaim (ftype (function (*) eval-closure) %prepare-form))
 (defun %prepare-form (form)
   "Compile the VM code form FORM into an executable EVAL-CLOSURE.
@@ -266,6 +273,12 @@ passing an ENVIRONMENT object as the argument."
            ((%global-call)
             (destructuring-bind (f &rest args) (rest form)
               (prepare-global-call f args)))
+           ((%block)
+            (destructuring-bind ((block-tag catch-tag used) &body body) (rest form)
+              (declare (ignore block-tag))
+              (if used
+                  (prepare-block catch-tag body)
+                  (prepare-progn body))))
            ((%tagbody)
             (destructuring-bind ((go-tag) &rest blocks) (rest form)
               (let* ((blocks*

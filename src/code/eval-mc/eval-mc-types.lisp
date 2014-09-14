@@ -153,6 +153,11 @@
   (lexicals nil :type list)
   ;; A list of variables locally declared SPECIAL in this context.
   (specials nil :type list)
+  ;; Information about for the block tag introduced in this context,
+  ;; in the form (BLOCK-TAG CATCH-TAG BLOCK-USED), or NIL if this
+  ;; context is not for a BLOCK. BLOCK-USED is set to true during
+  ;; compilation if a RETURN-FROM is resolved to this tag.
+  (block-tag nil :type list)
   ;; A list of optimization policy overrides.
   (policy nil :type list)
   ;; The environment for COMPILER-LET, accessible from locally defined
@@ -263,6 +268,12 @@
           (append policy (context-policy context)))
     new-context))
 
+(defun context-add-block-tag (context block-tag)
+  (let ((new-context (make-context context)))
+    (setf (context-block-tag new-context)
+          (list block-tag (gensym) nil))
+    new-context))
+
 ;;; Lexical information
 (defun context-var-symbol-macro-p (context var)
   (and (not (find var (context-specials context) :test #'equal))
@@ -326,6 +337,13 @@
 (defun context-find-function (context f)
   (context-find-lexical context `(function ,f)))
 
+(defun context-find-block-tag-info (context block-tag)
+  (loop for c = context then (context-parent c)
+        while c
+        do (let ((block-tag-info (context-block-tag c)))
+             (when (and block-tag-info
+                        (eql (first block-tag-info) block-tag))
+               (return block-tag-info)))))
 
 ;;; Utilities
 (defun context-collect (context f)

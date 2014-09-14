@@ -315,7 +315,7 @@ The result is a %LAMBDA VM code form for the supplied lambda expression."
                                                    :format-arguments (list k))))
                                         (pop to-check)
                                         (go check)))))))
-                         (,@(if blockp `(%block ,(fun-name-block-name name)) `(progn))
+                         (,@(if blockp `(block ,(fun-name-block-name name)) `(progn))
                           ,@body))))))))))
 
 (defun compile-ref (var)
@@ -709,9 +709,20 @@ Do not call this function directly.  Call COMPILE-FORM instead."
             ((progn)
              (compile-progn (rest form) mode))
             ((block)
-             (compile-form `(%block ,@(rest form)) mode))
+             (destructuring-bind (tag &body body) (cdr form)
+               (let ((*context* (context-add-block-tag *context* tag)))
+                 `(%block ,(context-block-tag *context*)
+                    ,@(mapcar #'compile-form body)))))
             ((return-from)
-             (compile-form `(%return-from ,@(rest form)) mode))
+             (destructuring-bind (tag &optional value) (cdr form)
+               (let ((block-info (context-find-block-tag-info *context* tag)))
+                 (when (not block-info)
+                   (error 'simple-program-error
+                          :format-control "return for unknown block: ~S"
+                          :format-arguments (list tag)))
+                 ;; Mark this block as having been used to return-from.
+                 (setf (third block-info) t)
+                 (compile-form `(throw ',(second block-info) ,value) mode))))
             ((go)
              (compile-form `(%go ,@(rest form)) mode))
             ((tagbody)

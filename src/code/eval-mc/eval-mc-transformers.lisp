@@ -12,34 +12,6 @@
 
 (in-package "SB!EVAL-MC")
 
-;; These definitions of BLOCK/RETURN-FROM/RETURN and TAGBODY/GO have
-;; been taken from Toilet Lisp.
-
-;; ----
-(define-symbol-macro block-mapping nil)
-
-(defmacro %block (block-name &body body &environment env)
-  ;; At compile-time, we establish a mapping from block names to
-  ;; catch-tags.  A RETURN-FROM is simply translated into a THROW to
-  ;; the corresponding tag.
-  (let ((catch-tag (gensym)))
-    `(symbol-macrolet ((block-mapping
-                         ,(acons block-name
-                                 catch-tag
-                                 (macroexpand 'block-mapping env))))
-       (catch ',catch-tag
-         ,@body))))
-
-(defmacro %return-from (block-name &optional value &environment env)
-  `(throw ',(cdr (assoc block-name (macroexpand 'block-mapping env)
-                        :test 'eq))
-     ,value))
-
-(defmacro %return (&optional value)
-  `(%return-from nil ,value))
-
-
-;; ----
 (defvar *go-tag-index-mapping* nil)
 (defvar *go-tag-catch-tag-mapping* nil)
 
