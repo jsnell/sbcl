@@ -160,7 +160,9 @@
   (%evaluation-environment nil :type (or null environment))
   ;; The context corresponding to the %EVALUATION-ENVIRONMENT, used
   ;; for compiling locally defined macros.
-  (%evaluation-context nil :type (or null context)))
+  (%evaluation-context nil :type (or null context))
+  ;; A native environment object (e.g. a SB-C:LEXENV) matching this context.
+  (native-environment nil))
 
 (sb!int:def!method print-object ((context context) stream)
   (print-unreadable-object (context stream :type t :identity t)

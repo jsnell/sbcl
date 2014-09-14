@@ -104,48 +104,52 @@
     (null
      (sb!c::make-null-lexenv))
     (context
-     (let ((macros
+     (when (context-native-environment context)
+       (return-from context->native-environment
+         (context-native-environment context)))
+     (let* ((macros
              (loop for (name . expander) in (context-macros context)
                    collect `(,name . (sb!sys:macro . ,expander))))
-           (symbol-macros
+            (symbol-macros
              (loop for (name . form) in (context-symbol-macros context)
                    collect `(,name . (sb!sys:macro . ,form))))
-           (functions
+            (functions
              (loop for lexical in (context-lexicals context)
                    for name = (lexical-name lexical)
                    when (and (listp name) (eq 'function (car name)))
-                     collect (let (leaf)  ;a null SB!C::FUNCTIONAL
-                               `(,(second name) . ,leaf))))
-           (vars
+                   collect (let (leaf)  ;a null SB!C::FUNCTIONAL
+                             `(,(second name) . ,leaf))))
+            (vars
              (loop for lexical in (context-lexicals context)
                    for name = (lexical-name lexical)
                    unless (and (listp name) (eq 'function (car name)))
-                     collect (let (leaf)  ;a null SB!C::LEAF
-                               `(,name . ,leaf))))
-           (policy
-            (loop for element in (labels ((aux (c)
-                                            (let ((parent (context-parent c)))
-                                              (append (context-policy c)
-                                                      (when parent
-                                                        (aux parent))))))
-                                   (aux context))
-                  for quality = (if (consp element)
-                                    (first element)
-                                    element)
-                  for value = (if (consp element)
-                                  (second element)
-                                  3)
-                  if (sb!c::policy-quality-name-p quality)
-                  collect (cons quality value)
-                  else do (warn "ignoring unknown optimization quality ~S"
-                                quality))))
-       ;; FIXME: We should probably memoize the native environments, so
-       ;; that we don't end up creating a fresh copy for the parent here.
-       (sb!c::make-lexenv :default (context->native-environment
-                                    (context-parent context))
-                          :policy policy
-                          :funs (append macros functions)
-                          :vars (append symbol-macros vars))))))
+                   collect (let (leaf)  ;a null SB!C::LEAF
+                             `(,name . ,leaf))))
+            (policy
+             (loop for element in (labels ((aux (c)
+                                             (let ((parent (context-parent c)))
+                                               (append (context-policy c)
+                                                       (when parent
+                                                         (aux parent))))))
+                                    (aux context))
+                   for quality = (if (consp element)
+                                     (first element)
+                                     element)
+                   for value = (if (consp element)
+                                   (second element)
+                                   3)
+                   if (sb!c::policy-quality-name-p quality)
+                   collect (cons quality value)
+                   else do (warn "ignoring unknown optimization quality ~S"
+                                 quality)))
+            (lexenv
+             (sb!c::make-lexenv :default (context->native-environment
+                                          (context-parent context))
+                                :policy policy
+                                :funs (append macros functions)
+                                :vars (append symbol-macros vars))))
+       (setf (context-native-environment context)
+             lexenv)))))
 
 
 ;;;; COMPILER UTILITIES
